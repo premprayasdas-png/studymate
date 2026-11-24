@@ -1,0 +1,6 @@
+name = "studymate-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-25"
+
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash"
