@@ -137,8 +137,11 @@ export default function HomeScreen() {
       router.push("/notes");
       return;
     }
-
-    Alert.alert(title, "We will build this feature next!");
+    if (title === "Progress") {
+      router.push("/study-tracker");
+      return;
+    }
+    router.push("/study-tools");
   };
 
   // Authentication loading
