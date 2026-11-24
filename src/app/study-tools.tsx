@@ -12,6 +12,14 @@ import { auth, db } from "./firebaseconfig";
 type ToolTab = "planner" | "timetable" | "subjects" | "quiz" | "tutor" | "progress";
 type Entry = { id: string; [key: string]: any };
 
+const AI_LANGUAGES = [
+  "Auto (same as question)", "English", "Odia (ଓଡ଼ିଆ)", "Hindi (हिन्दी)",
+  "Bengali (বাংলা)", "Telugu (తెలుగు)", "Tamil (தமிழ்)", "Marathi (मराठी)",
+  "Urdu (اردو)", "Gujarati (ગુજરાતી)", "Kannada (ಕನ್ನಡ)", "Malayalam (മലയാളം)",
+  "Punjabi (ਪੰਜਾਬੀ)", "Nepali (नेपाली)", "Spanish", "French", "Arabic",
+  "Portuguese", "German", "Japanese", "Korean", "Chinese",
+];
+
 const tabs: { id: ToolTab; label: string; icon: string }[] = [
   { id: "planner", label: "Planner", icon: "📅" },
   { id: "timetable", label: "Timetable", icon: "⏰" },
@@ -33,6 +41,8 @@ export default function StudyToolsScreen() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [tutorReply, setTutorReply] = useState("");
+  const [aiLanguage, setAiLanguage] = useState("Auto (same as question)");
+  const [askingTutor, setAskingTutor] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, user => setUid(user?.uid ?? null)), []);
 
@@ -80,14 +90,32 @@ export default function StudyToolsScreen() {
     } catch (e: any) { Alert.alert("Save failed", e.message); }
   };
 
-  const askTutor = () => {
-    const q = question.trim().toLowerCase();
-    if (!q) return;
-    // Offline fallback only. Connect a secure AI endpoint to enable generated answers.
-    if (q.includes("loop")) setTutorReply("A loop repeats a block of code. In C, the main types are for, while and do-while. Use for when the number of repetitions is known; use while when repetition depends on a condition.");
-    else if (q.includes("variable")) setTutorReply("A variable is a named memory location used to store a value. Example in C: int age = 21; Here, age is an integer variable.");
-    else if (q.includes("algorithm")) setTutorReply("An algorithm is a finite, step-by-step procedure for solving a problem. A good algorithm is clear, ordered, and eventually finishes.");
-    else setTutorReply("I can help you structure this topic: first identify the definition, then understand the key idea, study one example, and finally solve a practice question. For live AI-generated answers, connect the secure AI endpoint described in the project setup guide.");
+  const askTutor = async () => {
+    const prompt = question.trim();
+    if (!prompt) return Alert.alert("Enter a question", "Type your question first.");
+    const endpoint = process.env.EXPO_PUBLIC_STUDYMATE_AI_URL?.trim();
+    if (!endpoint) {
+      return Alert.alert(
+        "AI service not connected",
+        "Set EXPO_PUBLIC_STUDYMATE_AI_URL in your project .env file to your deployed StudyMate Worker URL, then restart Expo."
+      );
+    }
+    try {
+      setAskingTutor(true);
+      setTutorReply("");
+      const response = await fetch(`${endpoint.replace(/\\/$/, "")}/api/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: prompt, language: aiLanguage }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "AI request failed. Please try again.");
+      setTutorReply(data.answer || "The AI did not return an answer. Please try again.");
+    } catch (error: any) {
+      Alert.alert("StudyMate AI", error?.message || "Could not connect to the AI service.");
+    } finally {
+      setAskingTutor(false);
+    }
   };
 
   const renderEntryForm = (placeholder: string, detailPlaceholder: string) => (
@@ -140,11 +168,19 @@ export default function StudyToolsScreen() {
       </View>}
 
       {tab === "tutor" && <View style={styles.panel}>
-        <Text style={styles.panelTitle}>StudyMate Tutor</Text>
-        <Text style={styles.note}>Offline starter mode · sample explanations, not a live AI model.</Text>
-        <TextInput style={[styles.input, styles.multiline]} multiline value={question} onChangeText={setQuestion} placeholder="Ask about C, algorithms or a study topic..." />
-        <TouchableOpacity style={styles.primaryButton} onPress={askTutor}><Text style={styles.primaryText}>Get explanation</Text></TouchableOpacity>
-        {!!tutorReply && <View style={styles.reply}><Text style={styles.body}>{tutorReply}</Text></View>}
+        <Text style={styles.panelTitle}>StudyMate AI Tutor 🤖</Text>
+        <Text style={styles.note}>Ask academic or general questions in your own language. Auto mode replies in the language you use.</Text>
+        <Text style={styles.label}>Answer language</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.languageRow}>
+          {AI_LANGUAGES.map(language => <TouchableOpacity key={language} onPress={() => setAiLanguage(language)} style={[styles.languageChip, aiLanguage === language && styles.languageChipActive]}>
+            <Text style={[styles.languageText, aiLanguage === language && styles.languageTextActive]}>{language}</Text>
+          </TouchableOpacity>)}
+        </ScrollView>
+        <TextInput style={[styles.input, styles.multiline]} multiline value={question} onChangeText={setQuestion} placeholder="Ask anything: maths, science, coding, English, Odia, Hindi..." />
+        <TouchableOpacity style={[styles.primaryButton, askingTutor && styles.disabledButton]} onPress={askTutor} disabled={askingTutor}>
+          {askingTutor ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Ask StudyMate AI</Text>}
+        </TouchableOpacity>
+        {!!tutorReply && <View style={styles.reply}><Text selectable style={styles.body}>{tutorReply}</Text></View>}
       </View>}
 
       {tab === "progress" && <View style={styles.panel}>
@@ -180,6 +216,13 @@ const styles = StyleSheet.create({
   answer: { padding: 12, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 10, marginBottom: 8 },
   selectedAnswer: { borderColor: "#4F46E5", backgroundColor: "#EEF2FF" },
   note: { color: "#64748B", fontSize: 12, lineHeight: 18, marginTop: 12 },
+  label: { color: "#172554", fontWeight: "700", marginTop: 14, marginBottom: 8 },
+  languageRow: { gap: 8, paddingBottom: 12 },
+  languageChip: { borderWidth: 1, borderColor: "#CBD5E1", borderRadius: 18, paddingHorizontal: 12, paddingVertical: 9, backgroundColor: "#F8FAFC" },
+  languageChipActive: { backgroundColor: "#4F46E5", borderColor: "#4F46E5" },
+  languageText: { color: "#334155", fontSize: 12, fontWeight: "600" },
+  languageTextActive: { color: "#FFFFFF" },
+  disabledButton: { opacity: 0.65 },
   reply: { backgroundColor: "#EEF2FF", borderRadius: 12, padding: 14, marginTop: 14 },
   statsRow: { flexDirection: "row", gap: 8, marginTop: 8 },
   stat: { flex: 1, backgroundColor: "#EEF2FF", padding: 12, borderRadius: 12 },
