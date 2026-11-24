@@ -83,7 +83,7 @@ export default function HomeScreen() {
 
       setUser(result.user);
 
-      Alert.alert("Welcome!", "Your PremVerse account is ready.");
+      Alert.alert("Welcome!", "Your StudyMate account is ready.");
     } catch (error: any) {
       Alert.alert("Signup failed", error.message);
     } finally {
@@ -109,7 +109,7 @@ export default function HomeScreen() {
 
       setUser(result.user);
 
-      Alert.alert("Success", "Welcome back to PremVerse!");
+      Alert.alert("Success", "Welcome back to StudyMate!");
     } catch (error: any) {
       Alert.alert("Login failed", error.message);
     } finally {
@@ -159,7 +159,7 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.greeting}>HELLO, STUDENT 👋</Text>
 
-              <Text style={styles.title}>PremVerse</Text>
+              <Text style={styles.title}>StudyMate</Text>
 
               <Text style={styles.subtitle}>
                 Welcome, {user.displayName || "Student"}!
@@ -216,7 +216,7 @@ export default function HomeScreen() {
       <View style={styles.authContainer}>
         <Text style={styles.logo}>🎓</Text>
 
-        <Text style={styles.title}>PremVerse</Text>
+        <Text style={styles.title}>StudyMate</Text>
 
         <Text style={styles.subtitle}>Learn • Grow • Achieve</Text>
 
