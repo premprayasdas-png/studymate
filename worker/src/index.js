@@ -55,6 +55,7 @@ export default {
       if (!answer) return new Response(JSON.stringify({ error: "The AI returned an empty answer. Please try again." }), { status: 502, headers: cors });
       return new Response(JSON.stringify({ answer, model }), { headers: cors });
     } catch (error) {
+      console.error("StudyMate AI error:", error?.name || "Error", error?.message || "Unknown error");
       return new Response(JSON.stringify({ error: "Unable to process the question. Please try again." }), { status: 500, headers: cors });
     }
   },
