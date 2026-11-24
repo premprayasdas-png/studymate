@@ -1,56 +1,64 @@
-# Welcome to your Expo app 👋
+# StudyMate
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+StudyMate is a cross-platform student learning companion built with Expo, React Native, TypeScript, Expo Router and Firebase.
 
-## Get started
+## Current features
 
-1. Install dependencies
+- Firebase email/password authentication
+- Personal notes with Firestore storage
+- Study session tracker with daily and total study-hour summaries
+- Study tools screen: planner, timetable, subject list, sample quiz, tutor starter and progress overview
+- Android and web targets through Expo
 
+## Run locally
+
+1. Install Node.js LTS and Git.
+2. Clone this repository and enter the project folder:
+   ```bash
+   git clone https://github.com/premprayasdas-png/studymate.git
+   cd studymate
+   ```
+3. Install dependencies:
    ```bash
    npm install
    ```
-
-2. Start the app
-
+4. Start Expo:
    ```bash
    npx expo start
    ```
+   Press `w` for web, or scan the QR code with Expo Go for Android.
 
-In the output, you'll find options to open the app in a
+## Firebase setup
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+The app uses Firebase Authentication and Cloud Firestore. Enable Email/Password in Firebase Authentication and create a Firestore database in the Firebase console.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Before deploying, publish the included `firestore.rules` rules to Firestore (Firebase Console → Firestore Database → Rules). These rules restrict user documents to the signed-in owner. Extend them with field validation as the data model grows. Never use Admin SDK service-account credentials in the client app.
 
-## Get a fresh project
+## AI tutor and free usage
 
-When you're ready, run:
+The current Tutor tab is an offline starter with a few example explanations; it is not yet connected to a generative AI model. A free-tier model API can have usage limits and terms that change. The production integration should call the model through a server-side endpoint (for example, a Cloudflare Worker) and keep the API key in server-side secrets. Do not put a Gemini, OpenAI, or other private AI key in the Expo app or commit it to Git.
+
+## Development checks
 
 ```bash
-npm run reset-project
+npx expo lint
+npx tsc --noEmit
+npx expo-doctor
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Project structure
 
-### Other setup steps
+- `src/app/index.tsx` — sign-in/sign-up and dashboard
+- `src/app/notes.tsx` — notes
+- `src/app/study-tracker.tsx` — study time tracking
+- `src/app/study-tools.tsx` — planner, timetable, subjects, sample quiz, tutor starter and progress
+- `src/app/firebaseconfig.ts` — Firebase client configuration
+- `firestore.rules` — owner-scoped Firestore rules
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Roadmap
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Complete and test planner, timetable, subjects and quiz flows.
+2. Add edit/delete operations, date/time validation and richer progress charts.
+3. Connect a secure free-tier AI endpoint for tutor explanations, note summaries and quiz generation.
+4. Add PDF uploads, exam schedules, reminders, profile/settings and polish Android/web layouts.
+5. Add automated checks and production deployment instructions.
